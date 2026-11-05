@@ -42,6 +42,8 @@ function h(tag, props = {}, ...children) {
 }
 
 const money = (value) => new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' }).format(value);
+// Tolerant Reader: v1 liefert den Preis als Zahl, v2 als { amount, currency }
+const priceAmount = (price) => (typeof price === 'number' ? price : price.amount);
 const dateTime = (value) => new Intl.DateTimeFormat('de-CH', {
   weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
 }).format(new Date(value));
@@ -149,7 +151,7 @@ function renderAuth() {
 async function loadShowtimes() {
   state.showtimesError = null;
   try {
-    const { data } = await api('/showtimes');
+    const { data } = await api(config.showtimesPath);
     state.showtimes = data;
   } catch (error) {
     state.showtimes = null;
@@ -180,7 +182,7 @@ function renderShowtimes() {
   },
   h('strong', {}, showtime.filmTitle),
   h('span', { class: 'muted small' }, `${dateTime(showtime.startsAtUtc)} · ${showtime.hallName}`),
-  h('div', { class: 'small' }, money(showtime.price)))));
+  h('div', { class: 'small' }, money(priceAmount(showtime.price))))));
 }
 
 async function selectShowtime(id, seats = []) {
@@ -188,7 +190,7 @@ async function selectShowtime(id, seats = []) {
   state.bookingNotice = null;
   state.chosenSeats = new Set(seats);
   try {
-    const { data } = await api(`/showtimes/${id}`);
+    const { data } = await api(`${config.showtimesPath}/${id}`);
     state.selected = data;
   } catch (error) {
     state.selected = null;
@@ -249,13 +251,14 @@ function renderSeats() {
   }
 
   const count = state.chosenSeats.size;
-  const total = count * showtime.price;
+  const pricePerSeat = priceAmount(showtime.price);
+  const total = count * pricePerSeat;
   let actionLabel = 'Sitze auswählen';
   if (count > 0) actionLabel = isLoggedIn() ? `${count} Sitz${count > 1 ? 'e' : ''} buchen` : 'Anmelden und buchen';
 
   el.seats.replaceChildren(
     h('p', {}, h('strong', {}, showtime.film.title)),
-    h('p', { class: 'muted small' }, `${dateTime(showtime.startsAtUtc)} · ${showtime.hall.name} · ${money(showtime.price)} pro Sitz`),
+    h('p', { class: 'muted small' }, `${dateTime(showtime.startsAtUtc)} · ${showtime.hall.name} · ${money(pricePerSeat)} pro Sitz`),
     h('div', { class: 'screen' }, 'Leinwand'),
     h('div', { class: 'seat-scroll' }, ...rows),
     h('div', { class: 'summary' },

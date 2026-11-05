@@ -10,6 +10,12 @@ ausgeliefert von nginx. Der Browser erreicht das Frontend und alle APIs über da
 3. `POST /api/bookings` mit Bearer-Token. Gesendet werden nur `showtimeId` und `seats`, den Preis bestimmt der booking-service.
 4. Die Buchung steht auf "Zahlung läuft". Die Seite lädt den Status alle 2 s nach, bis sie auf "Bestätigt" wechselt.
 
+## Showtime-API v1 und v2
+
+`showtimesPath` in `web/config.js` legt fest, welche Version das Frontend aufruft. Als Tolerant Reader versteht es beide
+Preisformate: `price` als Zahl (v1) und als `{ amount, currency }` (v2). Der Ablauf der Umstellung steht im README von
+`cinema-deploy`.
+
 ## Verhalten bei Ausfällen
 
 | Ausfall | Verhalten |
@@ -38,6 +44,6 @@ Der Demo-User steht in `cinema-deploy/keycloak/import/cinema-realm.json`.
 | Pfad | Inhalt |
 |---|---|
 | `web/app.js` | Ablauf, API-Aufrufe, Darstellung |
-| `web/config.js` | API-Pfad und Keycloak-Einstellungen |
+| `web/config.js` | API-Pfade und Keycloak-Einstellungen |
 | `web/vendor/` | `keycloak-js` 26.2.5, unverändert aus dem npm-Paket |
 | `nginx.conf`, `Dockerfile` | Auslieferung als Container |
